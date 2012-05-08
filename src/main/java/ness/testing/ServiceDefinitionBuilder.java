@@ -43,7 +43,6 @@ public class ServiceDefinitionBuilder {
     private Config baseConfig = Config.getEmptyConfig();
 
     public ServiceDefinitionBuilder() {
-        config.put("ness.db.defaults.uri", "jdbc:postgresql://localhost/trumpet_test?user=trumpet_test");
         config.put("galaxy.internal.port.http", "0");
         config.put("ness.httpserver.shutdown-timeout", "0s");
         config.put("org.quartz.threadPool.threadCount", "1");
@@ -135,9 +134,9 @@ public class ServiceDefinitionBuilder {
         // Make it optional so that people can test non-Jersey packages
         final Class<?> klass;
         try {
-            klass = Class.forName("ness.jersey.BasicJerseyServerModule");
+            klass = Class.forName("com.nesscomputing.jersey.BasicJerseyServerModule");
         } catch (ClassNotFoundException e) {
-            LOG.infoDebug(e, "Could not find Jersey module, will not be available to integration tests");
+            LOG.infoDebug(e, "Could not find Jersey module, will not be available to integration tests!");
             return Modules.EMPTY_MODULE;
         }
 
