@@ -15,23 +15,12 @@
  */
 package com.nesscomputing.testing;
 
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.galaxyEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.httpClientEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.httpServerEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jacksonEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jerseyEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jmxEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.lifecycleEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.metricsEnabled;
-import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.serviceTweaks;
-
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
 
 import org.apache.commons.configuration.MapConfiguration;
-import org.eclipse.jetty.server.Server;
 import org.junit.Rule;
 
 import com.google.common.collect.Lists;
@@ -44,10 +33,10 @@ import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import com.nesscomputing.config.Config;
 import com.nesscomputing.config.ConfigModule;
-import com.nesscomputing.httpclient.HttpClient;
 import com.nesscomputing.lifecycle.Lifecycle;
 import com.nesscomputing.testing.tweaked.TweakedModule;
 import com.nesscomputing.testing.tweaked.TweakedModules;
+import com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler;
 
 /**
  * Builds a {@link Rule} for use in tests which spins up one or more Jetty services, and exposes their HTTP servers
@@ -66,7 +55,7 @@ import com.nesscomputing.testing.tweaked.TweakedModules;
  * <ul>
  * <li> a managed {@link Lifecycle}
  * <li> HttpClient bindings for the <code>srvc</code> protocol to emulate discovery
- * <li> a Jetty {@link Server} bound on an unused localhost port
+ * <li> a Jetty Server bound on an unused localhost port
  * <li> a Config built from the {@link ServiceDefinition}
  * </ul>
  *
@@ -94,15 +83,15 @@ public class IntegrationTestRuleBuilder
     @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder defaultBuilder()
     {
-        return IntegrationTestRuleBuilder.builderWith(lifecycleEnabled,
-                                                      jacksonEnabled,
-                                                      httpClientEnabled,
-                                                      jerseyEnabled,
-                                                      galaxyEnabled,
-                                                      httpServerEnabled,
-                                                      jmxEnabled,
-                                                      metricsEnabled,
-                                                      serviceTweaks);
+        return IntegrationTestRuleBuilder.builderWith(TweakEnabler.lifecycleEnabled,
+                                                      TweakEnabler.jacksonEnabled,
+                                                      TweakEnabler.httpClientEnabled,
+                                                      TweakEnabler.jerseyEnabled,
+                                                      TweakEnabler.galaxyEnabled,
+                                                      TweakEnabler.httpServerEnabled,
+                                                      TweakEnabler.jmxEnabled,
+                                                      TweakEnabler.metricsEnabled,
+                                                      TweakEnabler.serviceTweaks);
     }
 
     /**
@@ -131,15 +120,15 @@ public class IntegrationTestRuleBuilder
     @SuppressWarnings("unchecked")
     public IntegrationTestRuleBuilder()
     {
-        this(lifecycleEnabled,
-             jacksonEnabled,
-             httpClientEnabled,
-             jerseyEnabled,
-             galaxyEnabled,
-             httpServerEnabled,
-             jmxEnabled,
-             metricsEnabled,
-             serviceTweaks);
+        this(TweakEnabler.lifecycleEnabled,
+             TweakEnabler.jacksonEnabled,
+             TweakEnabler.httpClientEnabled,
+             TweakEnabler.jerseyEnabled,
+             TweakEnabler.galaxyEnabled,
+             TweakEnabler.httpServerEnabled,
+             TweakEnabler.jmxEnabled,
+             TweakEnabler.metricsEnabled,
+             TweakEnabler.serviceTweaks);
     }
 
     private IntegrationTestRuleBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
@@ -167,7 +156,7 @@ public class IntegrationTestRuleBuilder
 
     /**
      * Register a service to be managed by this integration test rule
-     * @param serviceName the name to expose to {@link HttpClient} as
+     * @param serviceName the name to expose to HttpClient as
      * @param definition the definition for this service environment
      * @return the builder
      * @deprecated Use {@link IntegrationTestRuleBuilder#addService(String, TweakedModule).
@@ -181,7 +170,7 @@ public class IntegrationTestRuleBuilder
 
     /**
      * Register a service to be managed by this integration test rule
-     * @param serviceName the name to expose to {@link HttpClient} as
+     * @param serviceName the name to expose to HttpClient as
      * @param definition the definition for this service environment.
      * @return the builder
      */
@@ -194,7 +183,7 @@ public class IntegrationTestRuleBuilder
     /**
      * Register a service to be managed by this integration test rule. This service uses a diffent configuration than the
      * test case.
-     * @param serviceName the name to expose to {@link HttpClient} as.
+     * @param serviceName the name to expose to HttpClient as.
      * @param serviceConfig the configuration to use for this service.
      * @param definition the definition for this service environment.
      * @return the builder
