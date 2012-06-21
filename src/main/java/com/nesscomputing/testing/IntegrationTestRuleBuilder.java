@@ -15,12 +15,20 @@
  */
 package com.nesscomputing.testing;
 
-import static com.nesscomputing.testing.ModuleEnabler.ModulesEnable.httpClientEnabled;
-import static com.nesscomputing.testing.ModuleEnabler.ModulesEnable.jacksonEnabled;
-import static com.nesscomputing.testing.ModuleEnabler.ModulesEnable.serviceLifecycleEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.galaxyEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.httpClientEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.httpServerEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jacksonEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jerseyEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.jmxEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.lifecycleEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.metricsEnabled;
+import static com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler.serviceTweaks;
 
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
 
 import org.apache.commons.configuration.MapConfiguration;
 import org.eclipse.jetty.server.Server;
@@ -31,10 +39,15 @@ import com.google.common.collect.Maps;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Provider;
+import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import com.nesscomputing.config.Config;
+import com.nesscomputing.config.ConfigModule;
 import com.nesscomputing.httpclient.HttpClient;
 import com.nesscomputing.lifecycle.Lifecycle;
+import com.nesscomputing.testing.tweaked.TweakedModule;
+import com.nesscomputing.testing.tweaked.TweakedModules;
 
 /**
  * Builds a {@link Rule} for use in tests which spins up one or more Jetty services, and exposes their HTTP servers
@@ -65,51 +78,75 @@ import com.nesscomputing.lifecycle.Lifecycle;
 public class IntegrationTestRuleBuilder
 {
     /** All services registered with the builder */
-    private final Map<String, ServiceDefinition> installedServices = Maps.newHashMap();
-    private final List<MockedService> mockedServices = Lists.newArrayList();
+    @SuppressWarnings("deprecation")
+    private final Map<String, ServiceDefinition> serviceDefinitions = Maps.newHashMap();
+    private final Map<String, TweakedModule> serviceTweakedModules = Maps.newHashMap();
+    private final Map<String, Config> serviceConfigs = Maps.newHashMap();
     private final List<Module> modules = Lists.newArrayList();
+    private final List<TweakedModule> tweakedModules = Lists.newArrayList();
 
     private Config baseConfig = Config.getEmptyConfig();
     private Map<String, String> configKeys = Maps.newHashMap();
 
+    /**
+     * Return a default {@link IntegrationTestRuleBuilder}. This builder enables everything listed in {@link TweakedModules.TweakEnabler}.
+     */
+    @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder defaultBuilder()
     {
-        return IntegrationTestRuleBuilder.builderWith(serviceLifecycleEnabled, jacksonEnabled, httpClientEnabled);
+        return IntegrationTestRuleBuilder.builderWith(lifecycleEnabled,
+                                                      jacksonEnabled,
+                                                      httpClientEnabled,
+                                                      jerseyEnabled,
+                                                      galaxyEnabled,
+                                                      httpServerEnabled,
+                                                      jmxEnabled,
+                                                      metricsEnabled,
+                                                      serviceTweaks);
     }
 
+    /**
+     * Returns an {@link IntegrationTestRuleBuilder} that has no modules enabled by default. New modules can be added using {@link IntegrationTestRuleBuilder#addService(String, TweakedModule)}
+     * and the static getters from {@link TweakedModules}.
+     */
+    @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder emptyBuilder()
     {
         return IntegrationTestRuleBuilder.builderWith();
     }
 
-    public static final IntegrationTestRuleBuilder builderWith(final ModuleEnabler ... modules)
+    /**
+     * Returns a new {@link IntegrationTestRuleBuilder} with some services enabled. The services are a list of elements implementing {@link Provider<TweakedModule>}, e.g. the annotations
+     * in {@link TweakedModules.TweakEnabler}.
+     */
+    public static final IntegrationTestRuleBuilder builderWith(final Provider<TweakedModule> ... tweakModuleProviders)
     {
-        return new IntegrationTestRuleBuilder(modules);
+        return new IntegrationTestRuleBuilder(tweakModuleProviders);
     }
 
     /**
      * @deprecated Use {@link IntegrationTestRuleBuilder#defaultBuilder()}.
      */
     @Deprecated
+    @SuppressWarnings("unchecked")
     public IntegrationTestRuleBuilder()
     {
-        this(serviceLifecycleEnabled,
+        this(lifecycleEnabled,
              jacksonEnabled,
-             httpClientEnabled);
+             httpClientEnabled,
+             jerseyEnabled,
+             galaxyEnabled,
+             httpServerEnabled,
+             jmxEnabled,
+             metricsEnabled,
+             serviceTweaks);
     }
 
-    private IntegrationTestRuleBuilder(final ModuleEnabler ... modulesEnables)
+    private IntegrationTestRuleBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
     {
-        this.baseConfig = Config.getEmptyConfig();
-        for (ModuleEnabler enable : modulesEnables) {
-            modules.add(enable.getModule());
+        for (Provider<TweakedModule> tweakModuleProvider : tweakedModuleProviders) {
+            tweakedModules.add(tweakModuleProvider.get());
         }
-    }
-
-    public IntegrationTestRuleBuilder clearModules()
-    {
-        modules.clear();
-        return this;
     }
 
     public IntegrationTestRuleBuilder addModule(final Module module)
@@ -119,34 +156,74 @@ public class IntegrationTestRuleBuilder
     }
 
     /**
+     * Add a new {@link TweakedModule} to the builder. A tweaked module can supply config changes and/or a module for the test case or the services controlled
+     * by the integration test rule.
+     */
+    public IntegrationTestRuleBuilder addTweakedModule(final TweakedModule tweakedModule)
+    {
+        tweakedModules.add(tweakedModule);
+        return this;
+    }
+
+    /**
      * Register a service to be managed by this integration test rule
      * @param serviceName the name to expose to {@link HttpClient} as
      * @param definition the definition for this service environment
      * @return the builder
+     * @deprecated Use {@link IntegrationTestRuleBuilder#addService(String, TweakedModule).
      */
+    @Deprecated
     public IntegrationTestRuleBuilder addService(String serviceName, final ServiceDefinition definition)
     {
-        installedServices.put(serviceName, definition);
+        serviceDefinitions.put(serviceName, definition);
+        return this;
+    }
+
+    /**
+     * Register a service to be managed by this integration test rule
+     * @param serviceName the name to expose to {@link HttpClient} as
+     * @param definition the definition for this service environment.
+     * @return the builder
+     */
+    public IntegrationTestRuleBuilder addService(String serviceName, final TweakedModule tweakedModule)
+    {
+        serviceTweakedModules.put(serviceName, tweakedModule);
+        return this;
+    }
+
+    /**
+     * Register a service to be managed by this integration test rule. This service uses a diffent configuration than the
+     * test case.
+     * @param serviceName the name to expose to {@link HttpClient} as.
+     * @param serviceConfig the configuration to use for this service.
+     * @param definition the definition for this service environment.
+     * @return the builder
+     */
+    public IntegrationTestRuleBuilder addService(String serviceName, final Config serviceConfig, final TweakedModule tweakedModule)
+    {
+        serviceTweakedModules.put(serviceName, tweakedModule);
+        serviceConfigs.put(serviceName, serviceConfig);
         return this;
     }
 
     /**
      * Register a mocking service that is designed to be used for testing and mixes in functionality into
      * the environment
-     * @param mockedService the service mocking provider
+     * @param mockedService the service mocking provider.
      * @return the builder
+     * @deprecated Use {@link IntegrationTestRuleBuilder#addTweakedModule(TweakedModule)}.
      */
+    @Deprecated
     public IntegrationTestRuleBuilder addMockedService(MockedService mockedService)
     {
-        mockedServices.add(mockedService);
+        addTweakedModule(new MockedServiceWrapper(mockedService));
         return this;
     }
 
     /**
      * Set the base configuration for the test case.  Mocked services may override some of these values.
-     * Does not affect services spun up as part of the test, only the test case itself
      */
-    public IntegrationTestRuleBuilder setTestConfig(Config baseConfig)
+    public IntegrationTestRuleBuilder setTestConfig(final Config baseConfig)
     {
         this.baseConfig = baseConfig;
         return this;
@@ -154,9 +231,8 @@ public class IntegrationTestRuleBuilder
 
     /**
      * Set a single configuration option for the test case.
-     * Does not affect services spun up as part of the test, only the test case itself
      */
-    public IntegrationTestRuleBuilder setTestConfig(String key, String value)
+    public IntegrationTestRuleBuilder setTestConfig(final String key, final String value)
     {
         configKeys.put(key, value);
         return this;
@@ -167,45 +243,144 @@ public class IntegrationTestRuleBuilder
      * @param testCaseItself pass in the test case object so that Guice may perform field injection
      * @return
      */
-    public IntegrationTestRule build(Object testCaseItself)
+    public IntegrationTestRule build(final Object testCaseItself)
     {
         return build(testCaseItself, Modules.EMPTY_MODULE);
     }
 
     /**
-     * Builds the rule so that JUnit may run it
+     * Builds the rule so that JUnit may run it.
+     *
+     * If the testcase module requires the configuration object use {@link IntegrationTestRuleBuilder#build(Object)} and
+     * install the module with
+     *
+     * <pre>
+        addTweakedModule(TweakedModule.forTestModule(&lt;name or class or instance of test module&gt;));
+        </pre>
+     *
      * @param testCaseItself pass in the test case object so that Guice may perform field injection
      * @param testCaseModule any extra modules you would like injected into your test case
      * @return
+     *
      */
-    public IntegrationTestRule build(final Object testCaseItself, final Module testCaseModule)
+    public IntegrationTestRule build(final Object testCaseItself, @Nonnull final Module testCaseModule)
     {
         //
-        // Override the test case config with the tweaks passed in by the mocked services.
+        // Override the test case config with the tweaks exposed by the tweaked services.
         //
-        final Map<String, String> configTweaks = Maps.newHashMap();
-        for (MockedService mockedService : mockedServices) {
-            configTweaks.putAll(mockedService.getTestCaseConfigTweaks());
+        final Map<String, String> testCaseConfigTweaks = Maps.newHashMap();
+        final Map<String, String> serviceConfigTweaks = Maps.newHashMap();
+
+        for (final TweakedModule tweakedModule : tweakedModules) {
+            testCaseConfigTweaks.putAll(tweakedModule.getTestCaseConfigTweaks());
+            serviceConfigTweaks.putAll(tweakedModule.getServiceConfigTweaks());
         }
 
-        final Config testCaseConfig = Config.getOverriddenConfig(baseConfig, new MapConfiguration(configTweaks), new MapConfiguration(configKeys));
-        final Module testCaseServicesModule = new Module() {
+        //
+        // Build the test case module.
+        //
+        final Config testCaseConfig = Config.getOverriddenConfig(baseConfig, new MapConfiguration(testCaseConfigTweaks), new MapConfiguration(configKeys));
+        final Module module = new Module() {
             @Override
             public void configure(final Binder binder) {
-                for (MockedService mockedService : mockedServices) {
-                    binder.install(mockedService.getTestCaseModule());
+                for (TweakedModule tweakedModule : tweakedModules) {
+                    binder.install(tweakedModule.getTestCaseModule(testCaseConfig));
                 }
 
                 for (Module module : modules) {
                     binder.install(module);
                 }
+
+                binder.install(new ConfigModule(testCaseConfig));
+                binder.install(testCaseModule);
             }
         };
 
-        return new IntegrationTestRule(installedServices,
-                                       testCaseModule,
-                                       testCaseServicesModule,
-                                       testCaseConfig,
+        //
+        // Build the service modules.
+        //
+        final Map<String, Module> serviceModules = Maps.newHashMap();
+        addServiceDefinitions(serviceDefinitions, serviceConfigTweaks, serviceModules);
+        addServiceModules(serviceTweakedModules, serviceConfigTweaks, serviceModules);
+
+        return new IntegrationTestRule(serviceModules,
+                                       module,
                                        testCaseItself);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void addServiceDefinitions(final Map<String, ServiceDefinition> serviceDefinitions,
+                                       final Map<String, String> serviceConfigTweaks,
+                                       final Map<String, Module> serviceModules)
+    {
+        for (final Map.Entry<String, ServiceDefinition> entry : serviceDefinitions.entrySet()) {
+            // Reality is that this is the service configuration minus what a service definition might add as local tweaks
+            // for a named service. So the instance of the named service might run with a slightly different config
+            // than all the services that are also in the injector, because ServiceDefinition has no API to expose these
+            // tweaks to the other services.
+            //
+            // That is an actual problem and the reason why ServiceDefinition does not work.
+            //
+            // For services defined through a ServiceDefinition, always use the baseConfig, because there is no way to register
+            // such a service with its specific configuration. The usual way around this is that the service definition was supplied
+            // a service specific configuration through other means. So the service runs a very different configuration than all its
+            // additional services around it.
+            //
+            // That is an actual problem and another reason why ServiceDefinition does not work.
+            //
+            final Config serviceConfig = Config.getOverriddenConfig(baseConfig, new MapConfiguration(serviceConfigTweaks));
+
+            final Module serviceModule = new Module() {
+                @Override
+                public void configure(final Binder binder) {
+                    // This allows us to later ask an injector what it is named.
+                    binder.bindConstant().annotatedWith(Names.named("SERVICE")).to(entry.getKey());
+
+                    for (TweakedModule tweakedModule : tweakedModules) {
+                        binder.install(tweakedModule.getServiceModule(serviceConfig));
+                    }
+
+                    binder.install(new ConfigModule(serviceConfig));
+
+                    binder.install(entry.getValue().getModule(serviceConfigTweaks));
+                }
+            };
+
+            serviceModules.put(entry.getKey(), serviceModule);
+        }
+    }
+
+    private void addServiceModules(final Map<String, TweakedModule> serviceDefinitions,
+                                   final Map<String, String> serviceConfigTweaks,
+                                   final Map<String, Module> serviceModules)
+    {
+        for (final Map.Entry<String, TweakedModule> entry : serviceDefinitions.entrySet()) {
+
+            // A tweaked service can be registered with its own configuration. Use that as the base for all the service
+            // tweaks if present, otherwise use the base configuration.
+            final Config serviceBaseConfig = serviceConfigs.containsKey(entry.getKey()) ? serviceConfigs.get(entry.getKey()) : baseConfig;
+
+            final Config serviceConfig = Config.getOverriddenConfig(serviceBaseConfig,
+                                                                    new MapConfiguration(serviceConfigTweaks),
+                                                                    new MapConfiguration(entry.getValue().getServiceConfigTweaks()));
+
+            final Module serviceModule = new Module() {
+                @Override
+                public void configure(final Binder binder) {
+                    // This allows us to later ask an injector what it is named.
+                    binder.bindConstant().annotatedWith(Names.named("SERVICE")).to(entry.getKey());
+
+                    for (TweakedModule tweakedModule : tweakedModules) {
+                        binder.install(tweakedModule.getServiceModule(serviceConfig));
+                    }
+
+                    binder.install(new ConfigModule(serviceConfig));
+
+                    binder.install(entry.getValue().getServiceModule(serviceConfig));
+                }
+            };
+
+            serviceModules.put(entry.getKey(), serviceModule);
+        }
     }
 }

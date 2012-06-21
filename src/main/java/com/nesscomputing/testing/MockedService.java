@@ -18,10 +18,14 @@ package com.nesscomputing.testing;
 import java.util.Map;
 
 import com.google.inject.Module;
+import com.nesscomputing.testing.tweaked.TweakedModule;
 
 /**
- * Integration testing extension that mocks out a platform service, for example discovery
+ * Integration testing extension that mocks out a platform service, for example discovery.
+ *
+ * @deprecated Does not allow passing of configuration objects to created services. Use {@link TweakedModule} instead.
  */
+@Deprecated
 public interface MockedService {
 
     Map<String, String> getServiceConfigTweaks(String serviceName);

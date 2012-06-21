@@ -18,10 +18,15 @@ package com.nesscomputing.testing;
 import java.util.Map;
 
 import com.google.inject.Module;
+import com.nesscomputing.testing.tweaked.TweakedModule;
 
 /**
- * Encapsulate configuration and Guice bindings for an individual service
+ * Encapsulate configuration and Guice bindings for an individual service.
+ *
+ * @deprecated Use a {@link TweakedModule and define the {@link TweakedModule#getServiceModule(Config config, String serviceName)} and {@link TweakedModule#getServiceConfigTweaks(String serviceName)}.
  */
-public interface ServiceDefinition {
+@Deprecated
+public interface ServiceDefinition
+{
     Module getModule(Map<String, String> configTweaks);
 }
