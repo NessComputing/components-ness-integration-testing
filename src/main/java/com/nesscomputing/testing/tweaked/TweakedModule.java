@@ -25,7 +25,7 @@ import com.nesscomputing.config.Config;
  * Core class for the integration test pieces. A tweaked module can supply config changes and modules for either a test case, a service that should be spun up and shut down
  * or both. Services should be instantiated using the supplied config objects.
  *
- * This class should either be used with the {@link TweakedModule#forServiceModule(Object)} or {@link TweakedModule#forTestModule(Object)} methods or it should be extended
+ * This class should either be used with the {@link TweakedModule#forServiceModule(Object)} or {@link TweakedModule#forTestCaseModule(Object)} methods or it should be extended
  * and the various methods are overridden (see {@link TweakedModules} for examples).
  */
 public class TweakedModule
@@ -40,7 +40,7 @@ public class TweakedModule
      *
      * The module instantiated from this method will be present for the test case only.
      */
-    public static final TweakedModule forTestModule(final Object testModuleObject)
+    public static final TweakedModule forTestCaseModule(final Object testModuleObject)
     {
         return new TweakedModule(ModuleProvider.forModule(testModuleObject), ModuleProvider.EMPTY_MODULE_PROVIDER);
     }

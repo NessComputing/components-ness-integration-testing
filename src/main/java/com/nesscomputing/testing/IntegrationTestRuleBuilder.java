@@ -71,7 +71,6 @@ public class IntegrationTestRuleBuilder
     private final Map<String, ServiceDefinition> serviceDefinitions = Maps.newHashMap();
     private final Map<String, TweakedModule> serviceTweakedModules = Maps.newHashMap();
     private final Map<String, Config> serviceConfigs = Maps.newHashMap();
-    private final List<Module> modules = Lists.newArrayList();
     private final List<TweakedModule> tweakedModules = Lists.newArrayList();
 
     private Config baseConfig = Config.getEmptyConfig();
@@ -138,15 +137,44 @@ public class IntegrationTestRuleBuilder
         }
     }
 
+    /**
+     * @deprecated Use {@link IntegrationTestRuleBuilder#addTestCaseModule(Object)} to add a module by name, class or instance.
+     */
+    @Deprecated
     public IntegrationTestRuleBuilder addModule(final Module module)
     {
-        modules.add(module);
+        return addTestCaseModule(module);
+    }
+
+    /**
+     * Add a module that is available to all services configurated in the integration test. Used e.g. to
+     * configure databases or other general facilities.
+     *
+     * @see TweakedModule#forServiceModule(Object).
+     */
+    public IntegrationTestRuleBuilder addServiceModule(final Object serviceModule)
+    {
+        tweakedModules.add(TweakedModule.forServiceModule(serviceModule));
         return this;
     }
 
     /**
+     * Add a module that is available to the test case code.
+     *
+     * @see TweakedModule#forTestCaseModule(Object).
+     */
+    public IntegrationTestRuleBuilder addTestCaseModule(final Object testCaseModule)
+    {
+        tweakedModules.add(TweakedModule.forTestCaseModule(testCaseModule));
+        return this;
+    }
+
+
+    /**
      * Add a new {@link TweakedModule} to the builder. A tweaked module can supply config changes and/or a module for the test case or the services controlled
      * by the integration test rule.
+     *
+     * This is a generalized version of {@link IntegrationTestRuleBuilder#addServiceModule(Object)} and {@link IntegrationTestRuleBuilder#addTestCaseModule(Object)}.
      */
     public IntegrationTestRuleBuilder addTweakedModule(final TweakedModule tweakedModule)
     {
@@ -274,10 +302,6 @@ public class IntegrationTestRuleBuilder
             public void configure(final Binder binder) {
                 for (TweakedModule tweakedModule : tweakedModules) {
                     binder.install(tweakedModule.getTestCaseModule(testCaseConfig));
-                }
-
-                for (Module module : modules) {
-                    binder.install(module);
                 }
 
                 binder.install(new ConfigModule(testCaseConfig));
