@@ -143,7 +143,7 @@ public class IntegrationTestRuleBuilder
     @Deprecated
     public IntegrationTestRuleBuilder addModule(final Module module)
     {
-        return addTestCaseModule(module);
+        return addTestCaseModules(module);
     }
 
     /**
@@ -152,9 +152,11 @@ public class IntegrationTestRuleBuilder
      *
      * @see TweakedModule#forServiceModule(Object).
      */
-    public IntegrationTestRuleBuilder addServiceModule(final Object serviceModule)
+    public IntegrationTestRuleBuilder addServiceModules(final Object ... serviceModules)
     {
-        tweakedModules.add(TweakedModule.forServiceModule(serviceModule));
+        for (final Object serviceModule : serviceModules) {
+            tweakedModules.add(TweakedModule.forServiceModule(serviceModule));
+        }
         return this;
     }
 
@@ -163,9 +165,11 @@ public class IntegrationTestRuleBuilder
      *
      * @see TweakedModule#forTestCaseModule(Object).
      */
-    public IntegrationTestRuleBuilder addTestCaseModule(final Object testCaseModule)
+    public IntegrationTestRuleBuilder addTestCaseModules(final Object ... testCaseModules)
     {
-        tweakedModules.add(TweakedModule.forTestCaseModule(testCaseModule));
+        for (final Object testCaseModule: testCaseModules) {
+            tweakedModules.add(TweakedModule.forTestCaseModule(testCaseModule));
+        }
         return this;
     }
 
@@ -176,9 +180,11 @@ public class IntegrationTestRuleBuilder
      *
      * This is a generalized version of {@link IntegrationTestRuleBuilder#addServiceModule(Object)} and {@link IntegrationTestRuleBuilder#addTestCaseModule(Object)}.
      */
-    public IntegrationTestRuleBuilder addTweakedModule(final TweakedModule tweakedModule)
+    public IntegrationTestRuleBuilder addTweakedModules(final TweakedModule ... tweakedModules)
     {
-        tweakedModules.add(tweakedModule);
+        for (final TweakedModule tweakedModule : tweakedModules) {
+            this.tweakedModules.add(tweakedModule);
+        }
         return this;
     }
 
@@ -233,7 +239,7 @@ public class IntegrationTestRuleBuilder
     @Deprecated
     public IntegrationTestRuleBuilder addMockedService(MockedService mockedService)
     {
-        addTweakedModule(new MockedServiceWrapper(mockedService));
+        addTweakedModules(new MockedServiceWrapper(mockedService));
         return this;
     }
 
