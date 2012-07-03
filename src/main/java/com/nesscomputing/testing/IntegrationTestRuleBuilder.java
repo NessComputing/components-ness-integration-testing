@@ -369,7 +369,7 @@ public class IntegrationTestRuleBuilder
         }
     }
 
-    private void addServiceModules(final Map<String, TweakedModule> serviceDefinitions,
+    private void addServiceModules(final Map<String, TweakedModule> serviceDefinitions, // NOPMD -- now why the fsck is that needed here? This method is used just fine.
                                    final Map<String, String> serviceConfigTweaks,
                                    final Map<String, Module> serviceModules)
     {
