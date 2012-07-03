@@ -15,18 +15,18 @@
  */
 package com.nesscomputing.testing;
 
-import java.util.Map;
-
+import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.nesscomputing.testing.tweaked.TweakedModule;
 
 /**
- * Encapsulate configuration and Guice bindings for an individual service.
- *
- * @deprecated Use a {@link TweakedModule and define the {@link TweakedModule#getServiceModule(Config config, String serviceName)} and {@link TweakedModule#getServiceConfigTweaks(String serviceName)}.
+ * Disable explicit bindings and circular proxies.
  */
-@Deprecated
-public interface ServiceDefinition
+class GuiceDisableModule implements Module
 {
-    Module getModule(Map<String, String> configTweaks);
+    @Override
+    public void configure(final Binder binder)
+    {
+        binder.requireExplicitBindings();
+        binder.disableCircularProxies();
+    }
 }
