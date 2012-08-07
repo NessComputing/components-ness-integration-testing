@@ -88,6 +88,11 @@ public class IntegrationTestRule extends ExternalResource
                                                        new GuiceDisableModule(),
                                                        testCaseModule);
 
+        final Binding<Lifecycle> lifecycleBinding = testInjector.getExistingBinding(Key.get(Lifecycle.class));
+        if (lifecycleBinding != null) {
+            lifecycles.add(lifecycleBinding.getProvider().get());
+        }
+
         testInjector.injectMembers(this);
         testInjector.injectMembers(testCaseItself);
     }
