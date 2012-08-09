@@ -92,6 +92,22 @@ public class IntegrationTestRule extends ExternalResource
         testInjector.injectMembers(testCaseItself);
     }
 
+    /**
+     * Returns the lifecycle stage used to start the services. Can be overridden in a subclass.
+     */
+    protected LifecycleStage getStartStage()
+    {
+        return LifecycleStage.ANNOUNCE_STAGE;
+    }
+
+    /**
+     * Returns the lifecycle stage used to stop the services. Can be overridden in a subclass.
+     */
+    protected LifecycleStage getStopStage()
+    {
+        return LifecycleStage.STOP_STAGE;
+    }
+
     @Override
     protected void before()
     {
@@ -99,7 +115,7 @@ public class IntegrationTestRule extends ExternalResource
 
         // Start up all the lifecycles.
         for (Lifecycle lifecycle : lifecycles) {
-            lifecycle.executeTo(LifecycleStage.ANNOUNCE_STAGE);
+            lifecycle.executeTo(getStartStage());
         }
     }
 
@@ -108,7 +124,7 @@ public class IntegrationTestRule extends ExternalResource
     {
         // Tear everything down.  Don't bother with error handling, any error here fails the tests.
         for (Lifecycle lifecycle : lifecycles) {
-            lifecycle.execute(LifecycleStage.STOP_STAGE);
+            lifecycle.execute(getStopStage());
         }
     }
 
