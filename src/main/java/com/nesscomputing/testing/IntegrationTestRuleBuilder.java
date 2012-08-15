@@ -81,22 +81,26 @@ public class IntegrationTestRuleBuilder
     private Config baseConfig = Config.getEmptyConfig();
     private Map<String, String> configKeys = Maps.newHashMap();
 
+    private static final TweakEnabler[] DEFAULT_MODULES = new TweakEnabler[] {
+        TweakEnabler.lifecycleEnabled,
+        TweakEnabler.jacksonEnabled,
+        TweakEnabler.httpClientEnabled,
+        TweakEnabler.jerseyEnabled,
+        TweakEnabler.galaxyEnabled,
+        TweakEnabler.httpServerEnabled,
+        TweakEnabler.jmxEnabled,
+        TweakEnabler.metricsEnabled,
+        TweakEnabler.serviceTweaks,
+        TweakEnabler.threadDelegatedScope
+    };
+
     /**
      * Return a default {@link IntegrationTestRuleBuilder}. This builder enables everything listed in {@link TweakedModules.TweakEnabler}.
      */
     @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder defaultBuilder()
     {
-        return IntegrationTestRuleBuilder.builderWith(TweakEnabler.lifecycleEnabled,
-                                                      TweakEnabler.jacksonEnabled,
-                                                      TweakEnabler.httpClientEnabled,
-                                                      TweakEnabler.jerseyEnabled,
-                                                      TweakEnabler.galaxyEnabled,
-                                                      TweakEnabler.httpServerEnabled,
-                                                      TweakEnabler.jmxEnabled,
-                                                      TweakEnabler.metricsEnabled,
-                                                      TweakEnabler.serviceTweaks,
-                                                      TweakEnabler.threadDelegatedScope);
+        return IntegrationTestRuleBuilder.builderWith(DEFAULT_MODULES);
     }
 
     /**
@@ -125,15 +129,7 @@ public class IntegrationTestRuleBuilder
     @SuppressWarnings("unchecked")
     public IntegrationTestRuleBuilder()
     {
-        this(TweakEnabler.lifecycleEnabled,
-             TweakEnabler.jacksonEnabled,
-             TweakEnabler.httpClientEnabled,
-             TweakEnabler.jerseyEnabled,
-             TweakEnabler.galaxyEnabled,
-             TweakEnabler.httpServerEnabled,
-             TweakEnabler.jmxEnabled,
-             TweakEnabler.metricsEnabled,
-             TweakEnabler.serviceTweaks);
+        this(DEFAULT_MODULES);
     }
 
     private IntegrationTestRuleBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
