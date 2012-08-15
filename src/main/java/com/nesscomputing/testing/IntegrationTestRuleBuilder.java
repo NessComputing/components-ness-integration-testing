@@ -95,7 +95,8 @@ public class IntegrationTestRuleBuilder
                                                       TweakEnabler.httpServerEnabled,
                                                       TweakEnabler.jmxEnabled,
                                                       TweakEnabler.metricsEnabled,
-                                                      TweakEnabler.serviceTweaks);
+                                                      TweakEnabler.serviceTweaks,
+                                                      TweakEnabler.threadDelegatedScope);
     }
 
     /**
