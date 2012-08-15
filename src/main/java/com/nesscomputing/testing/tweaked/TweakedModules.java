@@ -62,7 +62,10 @@ public final class TweakedModules
         jmxEnabled(TweakedModules.getJmxModule()),
 
         /** default service tweaks.Testcase and services. */
-        serviceTweaks(TweakedModules.getServiceTweaks());
+        serviceTweaks(TweakedModules.getServiceTweaks()),
+
+        /** Thread delegated scope. */
+        threadDelegatedScope(TweakedModules.getThreadDelegatedModule());
 
         private final TweakedModule module;
 
@@ -84,6 +87,7 @@ public final class TweakedModules
     private static final ModuleProvider HTTPSERVER_PROVIDER = ModuleProvider.forModule("com.nesscomputing.httpserver.HttpServerModule");
     private static final ModuleProvider GALAXY_PROVIDER = ModuleProvider.forModule("com.nesscomputing.galaxy.GalaxyConfigModule");
     private static final ModuleProvider METRICS_PROVIDER = ModuleProvider.forModule("com.yammer.metrics.guice.InstrumentationModule");
+    private static final ModuleProvider THREAD_DELEGATED_PROVIDER = ModuleProvider.forModule("com.nesscomputing.scopes.threaddelegate.ThreadDelegatedScopeModule");
 
     private TweakedModules()
     {
@@ -230,6 +234,23 @@ public final class TweakedModules
             @Override
             public Map<String, String> getServiceConfigTweaks() {
                 return ImmutableMap.of("org.quartz.threadPool.threadCount", "1");
+            }
+        };
+    }
+
+    public static TweakedModule getThreadDelegatedModule()
+    {
+        return new TweakedModule() {
+            @Override
+            public Module getServiceModule(Config config)
+            {
+                return THREAD_DELEGATED_PROVIDER.getSafeModule(config);
+            }
+
+            @Override
+            public Module getTestCaseModule(Config config)
+            {
+                return getServiceModule(config);
             }
         };
     }
