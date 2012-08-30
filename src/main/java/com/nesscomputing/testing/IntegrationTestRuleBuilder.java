@@ -20,9 +20,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.configuration.MapConfiguration;
-import org.junit.Rule;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -32,6 +29,10 @@ import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
+
+import org.apache.commons.configuration.MapConfiguration;
+import org.junit.Rule;
+
 import com.nesscomputing.config.Config;
 import com.nesscomputing.config.ConfigModule;
 import com.nesscomputing.lifecycle.Lifecycle;
@@ -97,7 +98,6 @@ public class IntegrationTestRuleBuilder
     /**
      * Return a default {@link IntegrationTestRuleBuilder}. This builder enables everything listed in {@link TweakedModules.TweakEnabler}.
      */
-    @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder defaultBuilder()
     {
         return IntegrationTestRuleBuilder.builderWith(DEFAULT_MODULES);
@@ -126,7 +126,6 @@ public class IntegrationTestRuleBuilder
      * @deprecated Use {@link IntegrationTestRuleBuilder#defaultBuilder()}.
      */
     @Deprecated
-    @SuppressWarnings("unchecked")
     public IntegrationTestRuleBuilder()
     {
         this(DEFAULT_MODULES);

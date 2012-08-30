@@ -19,13 +19,14 @@ import java.util.Map;
 
 import javax.management.MBeanServer;
 
-import org.weakref.jmx.testing.TestingMBeanServer;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
+
+import org.weakref.jmx.testing.TestingMBeanServer;
+
 import com.nesscomputing.config.Config;
 import com.nesscomputing.lifecycle.ServiceDiscoveryLifecycle;
 import com.nesscomputing.lifecycle.guice.LifecycleModule;
@@ -81,7 +82,7 @@ public final class TweakedModules
         }
     }
 
-    private static final ModuleProvider JERSEY_PROVIDER = ModuleProvider.forModule("com.nesscomputing.jersey.BasicJerseyServerModule");
+    private static final ModuleProvider JERSEY_PROVIDER = ModuleProvider.forModule("com.nesscomputing.server.templates.BasicDiscoveryServerModule");
     private static final ModuleProvider JACKSON_PROVIDER = ModuleProvider.forModule("com.nesscomputing.jackson.NessJacksonModule");
     private static final ModuleProvider HTTPCLIENT_PROVIDER = ModuleProvider.forModule("com.nesscomputing.httpclient.guice.HttpClientModule");
     private static final ModuleProvider HTTPSERVER_PROVIDER = ModuleProvider.forModule("com.nesscomputing.httpserver.HttpServerModule");
