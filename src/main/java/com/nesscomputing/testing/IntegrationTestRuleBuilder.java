@@ -23,6 +23,7 @@ import javax.annotation.Nonnull;
 import org.apache.commons.configuration.MapConfiguration;
 import org.junit.Rule;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Binder;
@@ -34,6 +35,7 @@ import com.google.inject.util.Modules;
 import com.nesscomputing.config.Config;
 import com.nesscomputing.config.ConfigModule;
 import com.nesscomputing.lifecycle.Lifecycle;
+import com.nesscomputing.lifecycle.LifecycleStage;
 import com.nesscomputing.testing.tweaked.TweakedModule;
 import com.nesscomputing.testing.tweaked.TweakedModules;
 import com.nesscomputing.testing.tweaked.TweakedModules.TweakEnabler;
@@ -73,8 +75,24 @@ public class IntegrationTestRuleBuilder
     private final Map<String, Config> serviceConfigs = Maps.newHashMap();
     private final List<TweakedModule> tweakedModules = Lists.newArrayList();
 
+    private LifecycleStage startStage = LifecycleStage.ANNOUNCE_STAGE;
+    private LifecycleStage stopStage = LifecycleStage.STOP_STAGE;
+
     private Config baseConfig = Config.getEmptyConfig();
     private Map<String, String> configKeys = Maps.newHashMap();
+
+    private static final TweakEnabler[] DEFAULT_MODULES = new TweakEnabler[] {
+        TweakEnabler.lifecycleEnabled,
+        TweakEnabler.jacksonEnabled,
+        TweakEnabler.httpClientEnabled,
+        TweakEnabler.jerseyEnabled,
+        TweakEnabler.galaxyEnabled,
+        TweakEnabler.httpServerEnabled,
+        TweakEnabler.jmxEnabled,
+        TweakEnabler.metricsEnabled,
+        TweakEnabler.serviceTweaks,
+        TweakEnabler.threadDelegatedScope
+    };
 
     /**
      * Return a default {@link IntegrationTestRuleBuilder}. This builder enables everything listed in {@link TweakedModules.TweakEnabler}.
@@ -82,15 +100,7 @@ public class IntegrationTestRuleBuilder
     @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder defaultBuilder()
     {
-        return IntegrationTestRuleBuilder.builderWith(TweakEnabler.lifecycleEnabled,
-                                                      TweakEnabler.jacksonEnabled,
-                                                      TweakEnabler.httpClientEnabled,
-                                                      TweakEnabler.jerseyEnabled,
-                                                      TweakEnabler.galaxyEnabled,
-                                                      TweakEnabler.httpServerEnabled,
-                                                      TweakEnabler.jmxEnabled,
-                                                      TweakEnabler.metricsEnabled,
-                                                      TweakEnabler.serviceTweaks);
+        return IntegrationTestRuleBuilder.builderWith(DEFAULT_MODULES);
     }
 
     /**
@@ -119,15 +129,7 @@ public class IntegrationTestRuleBuilder
     @SuppressWarnings("unchecked")
     public IntegrationTestRuleBuilder()
     {
-        this(TweakEnabler.lifecycleEnabled,
-             TweakEnabler.jacksonEnabled,
-             TweakEnabler.httpClientEnabled,
-             TweakEnabler.jerseyEnabled,
-             TweakEnabler.galaxyEnabled,
-             TweakEnabler.httpServerEnabled,
-             TweakEnabler.jmxEnabled,
-             TweakEnabler.metricsEnabled,
-             TweakEnabler.serviceTweaks);
+        this(DEFAULT_MODULES);
     }
 
     private IntegrationTestRuleBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
@@ -262,6 +264,26 @@ public class IntegrationTestRuleBuilder
     }
 
     /**
+     * Set the start stage for the services in this integration test.
+     */
+    public IntegrationTestRuleBuilder setStartStage(@Nonnull final LifecycleStage startStage)
+    {
+        Preconditions.checkNotNull(startStage, "The start stage must not be null!");
+        this.startStage = startStage;
+        return this;
+    }
+
+    /**
+     * Set the start stage for the services in this integration test.
+     */
+    public IntegrationTestRuleBuilder setStopStage(@Nonnull final LifecycleStage stopStage)
+    {
+        Preconditions.checkNotNull(stopStage, "The stop stage must not be null!");
+        this.stopStage = stopStage;
+        return this;
+    }
+
+    /**
      * Builds the rule so that JUnit may run it
      * @param testCaseItself pass in the test case object so that Guice may perform field injection
      * @return
@@ -323,6 +345,8 @@ public class IntegrationTestRuleBuilder
         addServiceModules(serviceTweakedModules, serviceConfigTweaks, serviceModules);
 
         return new IntegrationTestRule(serviceModules,
+                                       startStage,
+                                       stopStage,
                                        module,
                                        testCaseItself);
     }

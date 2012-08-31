@@ -53,11 +53,18 @@ public class IntegrationTestRule extends ExternalResource
 
     private final List<Lifecycle> lifecycles = Lists.newArrayList();
 
+    private final LifecycleStage startStage;
+    private final LifecycleStage stopStage;
+
     IntegrationTestRule(final Map<String, Module> services,
+                        final LifecycleStage startStage,
+                        final LifecycleStage stopStage,
                         final Module testCaseModule,
                         final Object testCaseItself)
     {
         this.services = services;
+        this.startStage = startStage;
+        this.stopStage = stopStage;
         this.testCaseModule = testCaseModule;
         this.testCaseItself = testCaseItself;
     }
@@ -99,7 +106,7 @@ public class IntegrationTestRule extends ExternalResource
 
         // Start up all the lifecycles.
         for (Lifecycle lifecycle : lifecycles) {
-            lifecycle.executeTo(LifecycleStage.ANNOUNCE_STAGE);
+            lifecycle.executeTo(startStage);
         }
     }
 
@@ -108,7 +115,7 @@ public class IntegrationTestRule extends ExternalResource
     {
         // Tear everything down.  Don't bother with error handling, any error here fails the tests.
         for (Lifecycle lifecycle : lifecycles) {
-            lifecycle.execute(LifecycleStage.STOP_STAGE);
+            lifecycle.execute(stopStage);
         }
     }
 
