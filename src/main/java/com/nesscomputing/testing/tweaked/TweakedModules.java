@@ -234,7 +234,10 @@ public final class TweakedModules
 
             @Override
             public Map<String, String> getServiceConfigTweaks() {
-                return ImmutableMap.of("org.quartz.threadPool.threadCount", "1");
+                return ImmutableMap.of(
+                        "org.quartz.threadPool.threadCount", "1",
+                        "ness.httpclient.socket-timeout", "10m",
+                        "ness.httpclient.request-timeout", "10m");
             }
         };
     }
