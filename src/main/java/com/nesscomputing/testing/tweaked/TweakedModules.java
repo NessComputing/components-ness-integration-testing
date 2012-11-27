@@ -20,11 +20,13 @@ import java.util.Map;
 import javax.management.MBeanServer;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Binder;
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
 
+import org.weakref.jmx.MBeanExporter;
+import org.weakref.jmx.guice.MBeanModule;
 import org.weakref.jmx.testing.TestingMBeanServer;
 
 import com.nesscomputing.config.Config;
@@ -214,10 +216,12 @@ public final class TweakedModules
 
             @Override
             public Module getServiceModule(final Config config) {
-                return new Module() {
+                return new AbstractModule() {
                     @Override
-                    public void configure(final Binder binder) {
-                        binder.bind (MBeanServer.class).to(TestingMBeanServer.class).in(Scopes.SINGLETON);
+                    public void configure() {
+                        install (new MBeanModule());
+                        bind (MBeanServer.class).to(TestingMBeanServer.class).in(Scopes.SINGLETON);
+                        bind (MBeanExporter.class).in(Scopes.SINGLETON);
                     }
                 };
             }
