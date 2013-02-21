@@ -15,6 +15,7 @@
  */
 package com.nesscomputing.testing;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.ProvisionException;
 import com.google.inject.Stage;
+
 import com.nesscomputing.lifecycle.Lifecycle;
 import com.nesscomputing.lifecycle.LifecycleStage;
 import com.nesscomputing.testing.lessio.AllowAll;
@@ -133,5 +135,18 @@ public class IntegrationTestRule extends ExternalResource
         final Injector injector = serviceInjectors.get(serviceName);
         Preconditions.checkState(injector != null, "Injector for service '%s' does not exist!", serviceName);
         return injector.getInstance(key);
+    }
+
+    /**
+     * Get the HTTP URL for accessing a service under test.
+     * The returned URI has the scheme, host, and port fields
+     * filled out to contact the tested service.  It is recommended
+     * to toss this in a UriBuilder for further processing.
+     */
+    public URI locateService(String serviceName)
+    {
+        final Injector injector = serviceInjectors.get(serviceName);
+        Preconditions.checkState(injector != null, "Injector for service '%s' does not exist!", serviceName);
+        return NessHttpserverHelper.getServiceUri(injector);
     }
 }
