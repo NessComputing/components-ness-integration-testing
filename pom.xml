@@ -6,7 +6,7 @@
   <parent>
     <groupId>com.nesscomputing</groupId>
     <artifactId>ness-oss-parent</artifactId>
-    <version>22</version>
+    <version>26</version>
   </parent>
 
   <scm>
@@ -22,12 +22,12 @@
   <version>3.2.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>ness integration testing helpers</description>
-  
+
   <dependencies>
     <dependency>
       <groupId>com.nesscomputing.components</groupId>
       <artifactId>ness-logging</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>com.nesscomputing.components</groupId>
@@ -49,7 +49,7 @@
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-configuration</groupId>
       <artifactId>commons-configuration</artifactId>
@@ -65,7 +65,7 @@
       <artifactId>jmxutils</artifactId>
       <version>1.12</version>
     </dependency>
-    
+
     <!-- Annotations used in the integration test builder -->
     <dependency>
       <groupId>com.nesscomputing.testing</groupId>
