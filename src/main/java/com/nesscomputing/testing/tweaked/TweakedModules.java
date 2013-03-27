@@ -86,7 +86,7 @@ public final class TweakedModules
 
     private static final ModuleProvider JERSEY_PROVIDER = ModuleProvider.forModule("com.nesscomputing.server.templates.BasicDiscoveryServerModule");
     private static final ModuleProvider JACKSON_PROVIDER = ModuleProvider.forModule("com.nesscomputing.jackson.NessJacksonModule");
-    private static final ModuleProvider HTTPCLIENT_PROVIDER = ModuleProvider.forModule("com.nesscomputing.httpclient.guice.HttpClientModule");
+    private static final ModuleProvider HTTPCLIENT_PROVIDER = ModuleProvider.forModule(UnnamedHttpClientModule.class);
     private static final ModuleProvider HTTPSERVER_PROVIDER = ModuleProvider.forModule("com.nesscomputing.httpserver.HttpServerModule");
     private static final ModuleProvider GALAXY_PROVIDER = ModuleProvider.forModule("com.nesscomputing.galaxy.GalaxyConfigModule");
     private static final ModuleProvider METRICS_PROVIDER = ModuleProvider.forModule("com.yammer.metrics.guice.InstrumentationModule");
