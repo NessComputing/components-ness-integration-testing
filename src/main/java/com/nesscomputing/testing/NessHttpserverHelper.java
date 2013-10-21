@@ -30,7 +30,7 @@ import com.nesscomputing.httpserver.HttpServer;
  * Written as a separate class so that ness-httpserver can be optional
  * in case that this is not used at all.
  */
-class NessHttpserverHelper
+final class NessHttpserverHelper
 {
 
     private NessHttpserverHelper() { }
