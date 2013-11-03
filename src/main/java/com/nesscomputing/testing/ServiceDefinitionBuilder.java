@@ -56,12 +56,12 @@ public class ServiceDefinitionBuilder
     private Config baseConfig = Config.getEmptyConfig();
     private Map<String, String> configKeys = Maps.newHashMap();
 
-    @SuppressWarnings("unchecked")
     public static final ServiceDefinitionBuilder builder()
     {
         return ServiceDefinitionBuilder.builderWith();
     }
 
+    @SafeVarargs
     public static final ServiceDefinitionBuilder builderWith(final Provider<TweakedModule> ... tweakModuleProviders)
     {
         return new ServiceDefinitionBuilder(tweakModuleProviders);
@@ -74,6 +74,7 @@ public class ServiceDefinitionBuilder
     {
     }
 
+    @SafeVarargs
     private ServiceDefinitionBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
     {
         for (Provider<TweakedModule> tweakModuleProvider : tweakedModuleProviders) {

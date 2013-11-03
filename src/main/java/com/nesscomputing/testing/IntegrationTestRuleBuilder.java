@@ -107,7 +107,6 @@ public class IntegrationTestRuleBuilder
      * Returns an {@link IntegrationTestRuleBuilder} that has no modules enabled by default. New modules can be added using {@link IntegrationTestRuleBuilder#addService(String, TweakedModule)}
      * and the static getters from {@link TweakedModules}.
      */
-    @SuppressWarnings("unchecked")
     public static final IntegrationTestRuleBuilder emptyBuilder()
     {
         return IntegrationTestRuleBuilder.builderWith();
@@ -117,6 +116,7 @@ public class IntegrationTestRuleBuilder
      * Returns a new {@link IntegrationTestRuleBuilder} with some services enabled. The services are a list of elements implementing {@link Provider<TweakedModule>}, e.g. the annotations
      * in {@link TweakedModules.TweakEnabler}.
      */
+    @SafeVarargs
     public static final IntegrationTestRuleBuilder builderWith(final Provider<TweakedModule> ... tweakModuleProviders)
     {
         return new IntegrationTestRuleBuilder(tweakModuleProviders);
@@ -131,6 +131,7 @@ public class IntegrationTestRuleBuilder
         this(DEFAULT_MODULES);
     }
 
+    @SafeVarargs
     private IntegrationTestRuleBuilder(final Provider<TweakedModule> ... tweakedModuleProviders)
     {
         for (Provider<TweakedModule> tweakModuleProvider : tweakedModuleProviders) {
